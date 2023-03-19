@@ -2,7 +2,7 @@
 #include <stdlib.h>
 void init(int* arr, int n)
 {
-    arr = malloc(n * sizeof(int)); //выделяем память для n чисел массива типа int
+    arr = malloc(n * sizeof(int)); 
     int i;
     for (i = 0; i < n; ++i)
     {
