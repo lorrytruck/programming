@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <errno.h>
 
 void copy_arr(int* arr, int* arr_c, size_t size) {
     for (int i = 0; i < size; i++) {
@@ -63,23 +64,23 @@ size_t int_vector_get_capacity(const IntVector* v) {
 }
 
 
-int int_vector_push_back(IntVector* v, int item) {
-    int flag = -1;
-    if (v->size == v->capacity) {
-        int mass[v->size];
-        copy_arr(v->data, mass, v->size);
-        free(v->data);
-        v->data = (int*)calloc(v->size*2, sizeof(int));
-        copy_arr(mass, v->data, v->size);
-        v->data[v->size] = item;
-        v->capacity = v->size*2;
-        flag = 0;
-    }else {
-        v->data[v->size] = item;
-        flag = 0;
-    }
+int int_vector_push_back(IntVector *v, int item) {
+  if (v->capacity > v->size) {
+    v->data[v->size] = item;
     v->size++;
-    return flag;
+    return 0;
+  } else {
+    v->capacity = v->capacity * 2;
+    v->data = realloc(v->data, v->capacity * sizeof(int));
+    if (!(v->data)) {
+      return -1;
+    }
+    v->data[v->size] = item;
+    v->size++;
+    return 0;
+  }
+  if (errno)
+    return -1;
 }
 
 
@@ -91,59 +92,51 @@ void int_vector_pop_back(IntVector* v) {
 }
 
 
-int int_vector_shrink_to_fit(IntVector* v) {
-    int flag = -1;
-    if (v->size != v->capacity) {
-        v->capacity = v->size;
-        int mass[v->size];
-        copy_arr(v->data, mass, v->size);
-        free(v->data);
-        v->data = (int*)calloc(v->size, sizeof(int));
-        copy_arr(mass, v->data, v->size);
-        flag = 0;
-    }
-    return flag;
+int int_vector_shrink_to_fit(IntVector *v) {
+  if (v->capacity == v->size) {
+    return 0;
+  } else {
+    v->capacity = v->size;
+    v->data = realloc(v->data, v->capacity * sizeof(int));
+    if (!(v->data))
+      return -1;
+    return 0;
+  }
+  if (errno)
+    return -1;
 }
 
-
 int int_vector_resize(IntVector* v, size_t new_size) {
-    int flag = -1;
-    if (new_size > v->size) {
-        if (new_size >= v->capacity) {
-            int mass[v->size];
-            copy_arr(v->data, mass, v->size);
-            free(v->data);
-            v->data = (int*)calloc(new_size, sizeof(int));
-            copy_arr(mass, v->data, v->size);
-            v->size = new_size;
-            v->capacity = new_size;
-            flag = 0;
-        }else {
-            for (int i = v->size; i < new_size; i++) {
-                v->data[i] = 0;
-            }
-            v->size = new_size;
-            flag = 0;
-        }
-    }else {
-        v->size = new_size;
-        int_vector_shrink_to_fit(v);
-        flag = 0;
+if (new_size > v->size) {
+    if (v->capacity < new_size) {
+      v->capacity = new_size;
+      v->data = realloc(v->data, v->capacity * sizeof(int));
     }
-    return flag;
+    for (int i = new_size - (new_size - v->size); i < new_size; i++) {
+      v->data[i] = 0;
+    }
+    v->size = new_size;
+    return 0;
+  } else if (new_size == v->size) {
+    return 0;
+  } else {
+    printf("error : use int_vector_shrink_to_fit ");
+    return -1;
+  }
+  if (errno)
+    return -1;
 }
 
 
 int int_vector_reserve(IntVector* v, size_t new_capacity) {
-    int flag = -1;
-    if (new_capacity > v->capacity) {
-        int mass[v->size];
-        copy_arr(v->data, mass, v->size);
-        free(v->data);
-        v->data = (int*)calloc(new_capacity, sizeof(int));
-        copy_arr(mass, v->data, v->size);
-        v->capacity = new_capacity;
-        flag = 0;
-    }
-    return flag;
+  if (new_capacity > v->capacity) {
+    v->capacity = new_capacity;
+    v->data = realloc(v->data, v->capacity * sizeof(int));
+    if (!(v->data))
+      return -1;
+    return 0;
+  } else
+    return 0;
+  if (errno)
+    return -1;
 }
